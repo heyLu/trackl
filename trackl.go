@@ -131,7 +131,6 @@ func main() {
 	router.Use(InstrumentedCtx)
 
 	router.Get("/", srv.handleHome)
-	router.Post("/tasks/{task-id}/{state}", srv.changeTaskState)
 
 	router.Route("/{namespace}", func(namespaceRouter chi.Router) {
 		namespaceRouter.Use(NamespaceCtx)
