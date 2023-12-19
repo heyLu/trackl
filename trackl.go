@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
 	"fmt"
 	"html/template"
 	"log"
@@ -92,13 +93,16 @@ type TasksStore interface {
 }
 
 var config struct {
-	Addr string
+	Addr   string
+	DBPath string
 }
 
 func main() {
-	config.Addr = "0.0.0.0:5000"
+	flag.StringVar(&config.Addr, "addr", "0.0.0.0:5000", "The address for the server to listen on")
+	flag.StringVar(&config.DBPath, "db-path", "trackl.db", "The path to the sqlite database file to store things in")
+	flag.Parse()
 
-	dbStore, err := newDBStore("sqlite3", "file:trackl.db?foreign_keys=true&auto_vacuum=incremental")
+	dbStore, err := newDBStore("sqlite3", "file:"+config.DBPath+"?foreign_keys=true&auto_vacuum=incremental")
 	if err != nil {
 		log.Fatal(err)
 	}
