@@ -107,6 +107,9 @@ var cssFS embed.FS
 //go:embed *.js
 var javascriptFS embed.FS
 
+//go:embed *.svg
+var imgFS embed.FS
+
 func main() {
 	flag.StringVar(&config.Addr, "addr", "0.0.0.0:5000", "The address for the server to listen on")
 	flag.StringVar(&config.DBPath, "db-path", "trackl.db", "The path to the sqlite database file to store things in")
@@ -139,6 +142,7 @@ func main() {
 
 	router.Mount("/css/", http.StripPrefix("/css", http.FileServer(http.FS(cssFS))))
 	router.Mount("/js/", http.StripPrefix("/js", http.FileServer(http.FS(javascriptFS))))
+	router.Mount("/img/", http.StripPrefix("/img", http.FileServer(http.FS(imgFS))))
 
 	log.Printf("Listening on http://%s", config.Addr)
 	log.Fatal(http.ListenAndServe(config.Addr, router))

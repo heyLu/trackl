@@ -19,6 +19,7 @@
 					 hx-post="/{{ .Namespace }}/tasks/{{ .ID }}/{{ .State.Next }}"
 					 hx-swap="outerHTML">
 				  {{ .Icon }}
+					<img class="htmx-indicator loading" src="/img/puff.svg" />
 				</div>
 				{{ end }}
 			{{ end }}

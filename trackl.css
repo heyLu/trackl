@@ -57,3 +57,11 @@ h1 {
 .event progress {
 	flex-grow: 10;
 }
+
+.loading {
+	position: absolute;
+	top: 1ex;
+	right: 1ex;
+	width: 1em;
+	height: 1em;
+}
