@@ -225,8 +225,22 @@ var homeTmpl = template.Must(template.New("").Parse(`<!doctype html>
 			--done-color: rgba(0, 200, 0, 0.7);
 		}
 
+		html {
+			height: 100%;
+		}
+
 		body {
-			background-color: white;
+			display: grid;
+			grid-template-rows: 1fr auto;
+			min-height: 100%;
+
+			margin: 0;
+			padding: 0 1ex;
+		}
+
+		h1 {
+			font-size: normal;
+			font-family: monospace;
 		}
 
 		.tasks {
@@ -270,31 +284,34 @@ var homeTmpl = template.Must(template.New("").Parse(`<!doctype html>
 </head>
 
 <body>
-		<section id="occasionals" class="tasks">
-		{{ range $task := .Tasks }}
-			{{ block "task" $task }}
-			<div class="box {{ .State }}"
-				 title="{{ .Description }}"
-				 hx-post="/{{ .Namespace }}/tasks/{{ .ID }}/{{ .State.Next }}"
-				 hx-swap="outerHTML">
-			  {{ .Icon }}
+		<main>
+			<h1>tasks</h1>
+			<section id="occasionals" class="tasks">
+			{{ range $task := .Tasks }}
+				{{ block "task" $task }}
+				<div class="box {{ .State }}"
+					 title="{{ .Description }}"
+					 hx-post="/{{ .Namespace }}/tasks/{{ .ID }}/{{ .State.Next }}"
+					 hx-swap="outerHTML">
+				  {{ .Icon }}
+				</div>
+				{{ end }}
+			{{ end }}
+			</section>
+
+			<h1>events</h1>
+			<section class="events">
+			{{ range $event := .Events }}
+			<div class="event">
+			{{ $event.Icon }}<progress max="100" value={{ $event.PercentDone }} title="{{ $event.DaysLeft }} days left"></progress>
 			</div>
 			{{ end }}
-		{{ end }}
-		</section>
+			</section>
+		</main>
 
-		<hr />
-
-		<section class="events">
-		{{ range $event := .Events }}
-		<div class="event">
-		{{ $event.Icon }}<progress max="100" value={{ $event.PercentDone }} title="{{ $event.DaysLeft }} days left"></progress>
-		</div>
-		{{ end }}
-		</section>
-
-		<pre>{{ .Namespace }}</pre>
-	
+		<footer>
+			<pre>{{ .Namespace }}</pre>
+		</footer>
 
 		<script src="/js/htmx.min.js"></script>
 </body>
