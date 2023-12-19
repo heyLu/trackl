@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"embed"
 	"errors"
 	"flag"
 	"fmt"
@@ -97,6 +98,9 @@ var config struct {
 	DBPath string
 }
 
+//go:embed *.js
+var javascript embed.FS
+
 func main() {
 	flag.StringVar(&config.Addr, "addr", "0.0.0.0:5000", "The address for the server to listen on")
 	flag.StringVar(&config.DBPath, "db-path", "trackl.db", "The path to the sqlite database file to store things in")
@@ -125,7 +129,7 @@ func main() {
 		namespaceRouter.Post("/tasks/{task-id}/{state}", srv.changeTaskState)
 	})
 
-	router.Mount("/js/htmx.min.js", http.StripPrefix("/js", http.FileServer(http.Dir("."))))
+	router.Mount("/js/", http.StripPrefix("/js", http.FileServer(http.FS(javascript))))
 
 	log.Printf("Listening on http://%s", config.Addr)
 	log.Fatal(http.ListenAndServe(config.Addr, router))

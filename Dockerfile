@@ -1,11 +1,14 @@
 FROM docker.io/golang:1.21-alpine3.19 as builder
 
-# gcc and libc-dev for sqlite, git for vcs listing in /stats page
-RUN apk add --no-cache gcc libc-dev git
+# gcc and libc-dev for sqlite
+RUN apk add --no-cache make gcc libc-dev
 
 WORKDIR /build
 
 COPY . .
+
+RUN make htmx.min.js
+
 RUN go build .
 
 FROM alpine:3.19
@@ -15,6 +18,6 @@ USER trackl
 
 VOLUME /app/data
 
-CMD /app/trackl -addr 0.0.0.0:5555
+CMD /app/trackl -addr 0.0.0.0:5000 -db-path /app/data/trackl.db
 
 COPY --from=builder /build/trackl /app/
