@@ -1,4 +1,4 @@
-trackl: *.go
+trackl: *.go htmx.min.js
 	go build .
 
 htmx.min.js:
