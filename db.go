@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
 	"fmt"
 	"log"
@@ -94,6 +95,32 @@ func (ds *dbStore) FindTask(ctx context.Context, namespace string, id string) (*
 	task.Namespace = namespace
 
 	return &task, nil
+}
+
+func (ds *dbStore) CreateTask(ctx context.Context, namespace string, task Task) (string, error) {
+	ns := make([]byte, 4)
+	_, err := rand.Read(ns)
+	if err != nil {
+		return "", err
+	}
+
+	id := fmt.Sprintf("%x", ns)
+
+	res, err := ds.db.ExecContext(ctx, "INSERT INTO tasks VALUES (?, ?, ?, ?)", namespace, id, task.Icon, task.Description)
+	if err != nil {
+		return "", fmt.Errorf("could not insert task: %w", err)
+	}
+
+	n, err := res.RowsAffected()
+	if err != nil {
+		return "", fmt.Errorf("could not check result: %w", err)
+	}
+
+	if n != 1 {
+		return "", fmt.Errorf("expected to change 1 row, but changed %d", n)
+	}
+
+	return id, nil
 }
 
 func (ds *dbStore) ChangeTaskState(ctx context.Context, namespace string, id string, state TaskState) error {

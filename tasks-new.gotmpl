@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1" />
+  <title>.trackl - create new task</title>  
+
+  <link href="/css/trackl.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+  {{ if .Error }}
+  <div class="error">{{ .Error }}</div>
+  {{ end }}
+
+  <form method="POST" action="/{{ .Namespace }}/tasks">
+    <div class="field">
+      <label for="icon">Icon</label>
+      <input name="icon" type="text" placeholder="Icon (short, ideally just a single emoji)" required minlength="1" />
+    </div>
+
+    <div class="field">
+      <label for="description">Description</label>
+      <input name="description" placeholder="What is the task about..." required />
+    </div>
+
+    <input type="submit" value="Create task" />
+  </form>
+</body>
+</html>

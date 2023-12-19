@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	"time"
 )
@@ -27,7 +28,19 @@ func (ms *memoryStore) FindTask(_ctx context.Context, _namespace string, id stri
 	}
 
 	return nil, fmt.Errorf("could not find task %s", id)
+}
 
+func (ms *memoryStore) CreateTask(_ctx context.Context, _namespace string, task Task) (string, error) {
+	ns := make([]byte, 4)
+	_, err := rand.Read(ns)
+	if err != nil {
+		return "", err
+	}
+
+	task.ID = fmt.Sprintf("%x", ns)
+
+	ms.tasks = append(ms.tasks, task)
+	return task.ID, nil
 }
 
 func (ms *memoryStore) ChangeTaskState(_ctx context.Context, _namespace string, id string, state TaskState) error {

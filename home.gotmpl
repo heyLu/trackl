@@ -10,7 +10,7 @@
 
 <body>
 		<main>
-			<h1>tasks</h1>
+			<h1>tasks <a href="/{{ .Namespace }}/tasks/new">⁺</a></h1>
 			<section id="occasionals" class="tasks">
 			{{ range $task := .Tasks }}
 				{{ block "task" $task }}

@@ -72,6 +72,13 @@ func (is *instrumentedStore) FindTask(ctx context.Context, namespace string, id 
 	return task, err
 }
 
+func (is *instrumentedStore) CreateTask(ctx context.Context, namespace string, task Task) (string, error) {
+	start := time.Now()
+	id, err := is.store.CreateTask(ctx, namespace, task)
+	is.addDBCallDuration(ctx, time.Since(start))
+	return id, err
+}
+
 func (is *instrumentedStore) ChangeTaskState(ctx context.Context, namespace string, id string, state TaskState) error {
 	start := time.Now()
 	err := is.store.ChangeTaskState(ctx, namespace, id, state)

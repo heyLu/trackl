@@ -11,6 +11,7 @@ import (
 	"math/rand"
 	"net/http"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -86,6 +87,7 @@ func (e Event) DaysLeft() int {
 type TasksStore interface {
 	Tasks(ctx context.Context, namespace string) ([]Task, error)
 	FindTask(ctx context.Context, namespace string, id string) (*Task, error)
+	CreateTask(ctx context.Context, namespace string, task Task) (id string, err error)
 	ChangeTaskState(ctx context.Context, namespace string, id string, state TaskState) error
 
 	Events(ctx context.Context, namespace string) ([]Event, error)
@@ -136,6 +138,8 @@ func main() {
 		namespaceRouter.Use(NamespaceCtx)
 
 		namespaceRouter.Get("/", srv.handleHome)
+		namespaceRouter.Get("/tasks/new", srv.handleNewTask)
+		namespaceRouter.Post("/tasks", srv.createTask)
 		namespaceRouter.Post("/tasks/{task-id}/{state}", srv.changeTaskState)
 	})
 
@@ -261,7 +265,74 @@ func (s *server) handleHome(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func (s *server) handleNewTask(w http.ResponseWriter, req *http.Request) {
+	namespace, ok := req.Context().Value(NamespaceKey).(string)
+	if !ok {
+		log.Printf("invalid value in namespace context: %#v", namespace)
+		http.Error(w, "invalid namespace", http.StatusInternalServerError)
+		return
+	}
+
+	err := homeTmpl.ExecuteTemplate(w, "tasks-new.gotmpl", map[string]any{
+		"Namespace": namespace,
+	})
+	if err != nil {
+		log.Println("Error:", err)
+	}
+}
+
 var homeTmpl = template.Must(template.ParseFS(tmplFS, "*.gotmpl"))
+
+func (s *server) createTask(w http.ResponseWriter, req *http.Request) {
+	namespace, ok := req.Context().Value(NamespaceKey).(string)
+	if !ok {
+		log.Printf("invalid value in namespace context: %#v", namespace)
+		http.Error(w, "invalid namespace", http.StatusInternalServerError)
+		return
+	}
+
+	err := req.ParseForm()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	errors := make([]string, 0)
+
+	icon := req.PostFormValue("icon")
+	if icon == "" {
+		errors = append(errors, fmt.Sprintf("icon cannot be empty"))
+	}
+
+	description := req.PostFormValue("description")
+	if description == "" {
+		errors = append(errors, "description cannot be empty")
+	}
+
+	_, err = s.store.CreateTask(req.Context(), namespace, Task{
+		Icon:        icon,
+		Description: description,
+	})
+	if err != nil {
+		errors = append(errors, err.Error())
+	}
+
+	if len(errors) > 0 {
+		w.WriteHeader(http.StatusBadRequest)
+
+		err := homeTmpl.ExecuteTemplate(w, "tasks-new.gotmpl", map[string]any{
+			"Namespace": namespace,
+			"Error":     strings.Join(errors, ","),
+		})
+		if err != nil {
+			log.Println("Error:", err)
+		}
+		return
+	}
+
+	w.Header().Set("Location", "/"+namespace)
+	w.WriteHeader(http.StatusSeeOther)
+}
 
 func (s *server) changeTaskState(w http.ResponseWriter, req *http.Request) {
 	state := TaskState(chi.URLParam(req, "state"))
