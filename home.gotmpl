@@ -35,7 +35,7 @@
 		</main>
 
 		<footer>
-			<pre>{{ .Namespace }}</pre>
+			<pre>{{ .Namespace }} - db: {{ .InstrumentedInfo.NumDBCalls }} calls / {{ .InstrumentedInfo.DBDuration }}</pre>
 		</footer>
 
 		<script src="/js/htmx.min.js"></script>

@@ -119,12 +119,13 @@ func main() {
 	defer dbStore.Close()
 
 	srv := &server{
-		store: dbStore,
+		store: InstrumentStore(dbStore),
 	}
 
 	router := chi.NewMux()
-	router.Use(NamespaceCtx)
 	router.Use(requestLogger)
+	router.Use(NamespaceCtx)
+	router.Use(InstrumentedCtx)
 
 	router.Get("/", srv.handleHome)
 	router.Post("/tasks/{task-id}/{state}", srv.changeTaskState)
@@ -247,9 +248,10 @@ func (s *server) handleHome(w http.ResponseWriter, req *http.Request) {
 	})
 
 	err = homeTmpl.Execute(w, map[string]any{
-		"Namespace": namespace,
-		"Tasks":     tasks,
-		"Events":    events,
+		"Namespace":        namespace,
+		"Tasks":            tasks,
+		"Events":           events,
+		"InstrumentedInfo": InstrumentedInfoFromContext(req.Context()),
 	})
 	if err != nil {
 		log.Println("Error:", err)
