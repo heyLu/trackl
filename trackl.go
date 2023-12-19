@@ -27,6 +27,7 @@ type Task struct {
 	// TODO: one-time task (flag?)
 	// TODO: timed task
 	// TODO: journalling as task
+	// TODO: "stacks" of tasks, possibly with links (e.g. watch/read these things; clean up browser tabs)
 }
 
 type TaskState string
