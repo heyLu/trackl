@@ -18,6 +18,9 @@ jobs:
       with:
         go-version: '1.21'
 
+    - name: Download JS dependencies
+      run: make htmx.min.js
+
     - name: Build
       run: go build -v ./...
 
