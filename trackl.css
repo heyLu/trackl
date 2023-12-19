@@ -1,0 +1,59 @@
+:root {
+	--done-color: rgba(0, 200, 0, 0.7);
+}
+
+html {
+	height: 100%;
+}
+
+body {
+	display: grid;
+	grid-template-rows: 1fr auto;
+	min-height: 100%;
+
+	margin: 0;
+	padding: 0 1ex;
+}
+
+h1 {
+	font-size: normal;
+	font-family: monospace;
+}
+
+.tasks {
+	display: flex;
+}
+
+.box {
+	border: 0.1ch solid black;
+	width: 2em;
+	height: 2em;
+	font-size: medium;
+
+	margin: 0.3ch;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.box.started {
+	background: linear-gradient(135deg, var(--done-color), var(--done-color) 50%, white 50%, white);
+}
+
+.box.done {
+	background-color: var(--done-color);
+}
+
+.events {
+	display: flex;
+	flex-direction: column;
+}
+
+.event {
+	display: flex;
+}
+
+.event progress {
+	flex-grow: 10;
+}

@@ -98,8 +98,14 @@ var config struct {
 	DBPath string
 }
 
+//go:embed *.gotmpl
+var tmplFS embed.FS
+
+//go:embed *.css
+var cssFS embed.FS
+
 //go:embed *.js
-var javascript embed.FS
+var javascriptFS embed.FS
 
 func main() {
 	flag.StringVar(&config.Addr, "addr", "0.0.0.0:5000", "The address for the server to listen on")
@@ -129,7 +135,8 @@ func main() {
 		namespaceRouter.Post("/tasks/{task-id}/{state}", srv.changeTaskState)
 	})
 
-	router.Mount("/js/", http.StripPrefix("/js", http.FileServer(http.FS(javascript))))
+	router.Mount("/css/", http.StripPrefix("/css", http.FileServer(http.FS(cssFS))))
+	router.Mount("/js/", http.StripPrefix("/js", http.FileServer(http.FS(javascriptFS))))
 
 	log.Printf("Listening on http://%s", config.Addr)
 	log.Fatal(http.ListenAndServe(config.Addr, router))
@@ -213,109 +220,7 @@ func (s *server) handleHome(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-var homeTmpl = template.Must(template.New("").Parse(`<!doctype html>
-<html>
-<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1" />
-		<title>.trackl</title>
-
-		<style>
-		:root {
-			--done-color: rgba(0, 200, 0, 0.7);
-		}
-
-		html {
-			height: 100%;
-		}
-
-		body {
-			display: grid;
-			grid-template-rows: 1fr auto;
-			min-height: 100%;
-
-			margin: 0;
-			padding: 0 1ex;
-		}
-
-		h1 {
-			font-size: normal;
-			font-family: monospace;
-		}
-
-		.tasks {
-			display: flex;
-		}
-
-		.box {
-			border: 0.1ch solid black;
-			width: 2em;
-			height: 2em;
-			font-size: medium;
-
-			margin: 0.3ch;
-
-			display: flex;
-			align-items: center;
-			justify-content: center;
-		}
-
-		.box.started {
-			background: linear-gradient(135deg, var(--done-color), var(--done-color) 50%, white 50%, white);
-		}
-
-		.box.done {
-			background-color: var(--done-color);
-		}
-
-		.events {
-			display: flex;
-			flex-direction: column;
-		}
-
-		.event {
-			display: flex;
-		}
-
-		.event progress {
-			flex-grow: 10;
-		}
-		</style>
-</head>
-
-<body>
-		<main>
-			<h1>tasks</h1>
-			<section id="occasionals" class="tasks">
-			{{ range $task := .Tasks }}
-				{{ block "task" $task }}
-				<div class="box {{ .State }}"
-					 title="{{ .Description }}"
-					 hx-post="/{{ .Namespace }}/tasks/{{ .ID }}/{{ .State.Next }}"
-					 hx-swap="outerHTML">
-				  {{ .Icon }}
-				</div>
-				{{ end }}
-			{{ end }}
-			</section>
-
-			<h1>events</h1>
-			<section class="events">
-			{{ range $event := .Events }}
-			<div class="event">
-			{{ $event.Icon }}<progress max="100" value={{ $event.PercentDone }} title="{{ $event.DaysLeft }} days left"></progress>
-			</div>
-			{{ end }}
-			</section>
-		</main>
-
-		<footer>
-			<pre>{{ .Namespace }}</pre>
-		</footer>
-
-		<script src="/js/htmx.min.js"></script>
-</body>
-</html>`))
+var homeTmpl = template.Must(template.ParseFS(tmplFS, "*.gotmpl"))
 
 func (s *server) changeTaskState(w http.ResponseWriter, req *http.Request) {
 	state := TaskState(chi.URLParam(req, "state"))

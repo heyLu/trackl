@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1" />
+		<title>.trackl</title>
+
+    <link href="/css/trackl.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+		<main>
+			<h1>tasks</h1>
+			<section id="occasionals" class="tasks">
+			{{ range $task := .Tasks }}
+				{{ block "task" $task }}
+				<div class="box {{ .State }}"
+					 title="{{ .Description }}"
+					 hx-post="/{{ .Namespace }}/tasks/{{ .ID }}/{{ .State.Next }}"
+					 hx-swap="outerHTML">
+				  {{ .Icon }}
+				</div>
+				{{ end }}
+			{{ end }}
+			</section>
+
+			<h1>events</h1>
+			<section class="events">
+			{{ range $event := .Events }}
+			<div class="event">
+			{{ $event.Icon }}<progress max="100" value={{ $event.PercentDone }} title="{{ $event.DaysLeft }} days left"></progress>
+			</div>
+			{{ end }}
+			</section>
+		</main>
+
+		<footer>
+			<pre>{{ .Namespace }}</pre>
+		</footer>
+
+		<script src="/js/htmx.min.js"></script>
+</body>
+</html>
