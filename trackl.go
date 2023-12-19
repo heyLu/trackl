@@ -84,11 +84,11 @@ func (e Event) DaysLeft() int {
 }
 
 type TasksStore interface {
-	Tasks(namespace string) ([]Task, error)
-	FindTask(namespace string, id string) (*Task, error)
-	ChangeTaskState(namespace string, id string, state TaskState) error
+	Tasks(ctx context.Context, namespace string) ([]Task, error)
+	FindTask(ctx context.Context, namespace string, id string) (*Task, error)
+	ChangeTaskState(ctx context.Context, namespace string, id string, state TaskState) error
 
-	Events(namespace string) ([]Event, error)
+	Events(ctx context.Context, namespace string) ([]Event, error)
 
 	Close() error
 }
@@ -195,13 +195,13 @@ func (s *server) handleHome(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	tasks, err := s.store.Tasks(namespace)
+	tasks, err := s.store.Tasks(req.Context(), namespace)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	events, err := s.store.Events(namespace)
+	events, err := s.store.Events(req.Context(), namespace)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -236,14 +236,14 @@ func (s *server) changeTaskState(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	task, err := s.store.FindTask(namespace, chi.URLParam(req, "task-id"))
+	task, err := s.store.FindTask(req.Context(), namespace, chi.URLParam(req, "task-id"))
 	if err != nil {
 		log.Println("Error:", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = s.store.ChangeTaskState(namespace, task.ID, state)
+	err = s.store.ChangeTaskState(req.Context(), namespace, task.ID, state)
 	if err != nil {
 		log.Println("Error:", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
