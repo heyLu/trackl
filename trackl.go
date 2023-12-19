@@ -124,6 +124,7 @@ func main() {
 
 	router := chi.NewMux()
 	router.Use(NamespaceCtx)
+	router.Use(requestLogger)
 
 	router.Get("/", srv.handleHome)
 	router.Post("/tasks/{task-id}/{state}", srv.changeTaskState)
@@ -181,6 +182,41 @@ func NamespaceCtx(next http.Handler) http.Handler {
 		ctx := context.WithValue(req.Context(), NamespaceKey, namespace)
 		next.ServeHTTP(w, req.WithContext(ctx))
 	})
+}
+
+func requestLogger(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		start := time.Now()
+		sw := &statusWriter{
+			ResponseWriter: w,
+		}
+		next.ServeHTTP(sw, req)
+		routePattern := chi.RouteContext(req.Context()).RoutePattern()
+		if routePattern == "" {
+			routePattern = "/"
+		}
+		log.Printf("%s %s %d - took %s", req.Method, routePattern, sw.statusCode, time.Since(start))
+	})
+}
+
+var _ http.ResponseWriter = &statusWriter{}
+
+type statusWriter struct {
+	http.ResponseWriter
+
+	statusCode int
+}
+
+func (sw *statusWriter) Write(p []byte) (int, error) {
+	if sw.statusCode == 0 {
+		sw.statusCode = 200
+	}
+	return sw.ResponseWriter.Write(p)
+}
+
+func (sw *statusWriter) WriteHeader(statusCode int) {
+	sw.ResponseWriter.WriteHeader(statusCode)
+	sw.statusCode = statusCode
 }
 
 type server struct {
